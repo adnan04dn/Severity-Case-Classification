@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Severity & Case Classification</title>
+
+<style>
+body{
+    font-family:Arial,sans-serif;
+    margin:0;
+    background:#f4f7fb;
+    color:#172033;
+}
+
+.container{
+    max-width:850px;
+    margin:auto;
+    padding:18px;
+}
+
+header{
+    background:#173f7a;
+    color:white;
+    padding:25px;
+    border-radius:15px;
+    margin-bottom:18px;
+}
+
+section{
+    background:white;
+    padding:20px;
+    margin:16px 0;
+    border-radius:14px;
+    box-shadow:0 3px 12px #0001;
+}
+
+h1,h2{
+    margin-top:0;
+}
+
+label{
+    display:block;
+    font-weight:bold;
+    margin:14px 0;
+}
+
+input,select,textarea{
+    width:100%;
+    padding:11px;
+    margin-top:6px;
+    box-sizing:border-box;
+    border:1px solid #bbb;
+    border-radius:8px;
+}
+
+textarea{
+    min-height:80px;
+}
+
+button{
+    background:#173f7a;
+    color:white;
+    border:0;
+    padding:12px 20px;
+    border-radius:8px;
+    font-size:16px;
+    cursor:pointer;
+}
+
+button:hover{
+    background:#0f2d58;
+}
+
+.case{
+    border:1px solid #ccd5e5;
+    padding:15px;
+    margin:15px 0;
+    border-radius:10px;
+}
+
+.result{
+    background:#eef4ff;
+    padding:18px;
+    border-radius:10px;
+    margin-top:18px;
+}
+
+.row{
+    padding:9px;
+    border-bottom:1px solid #ccd5e5;
+}
+
+.badge{
+    display:inline-block;
+    padding:7px 12px;
+    border-radius:20px;
+    font-weight:bold;
+    margin:4px;
+    background:#dce8ff;
+}
+
+.hidden{
+    display:none;
+}
+
+.note{
+    background:#fff8df;
+    padding:12px;
+    border-radius:8px;
+    font-size:14px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<header>
+<h1>Severity & Case Classification</h1>
+<p>Pharmacovigilance tool for ADR seriousness, expectedness and clinical impact assessment.</p>
+</header>
+
+<section>
+
+<h2>Case Information</h2>
+
+<label>
+Patient ID
+<input id="patient" placeholder="ADR-001">
+</label>
+
+<label>
+ADR / Reaction
+<textarea id="reaction" placeholder="Example: Skin rash and itching"></textarea>
+</label>
+
+<label>
+Suspected Drug
+<input id="drug" placeholder="Example: Amoxicillin">
+</label>
+
+<label>
+Date of Onset
+<input id="onset" type="date">
+</label>
+
+</section>
+
+<section>
+
+<h2>Seriousness Assessment</h2>
+
+<label>
+Did the ADR result in death?
+<select id="death">
+<option value="No">No</option>
+<option value="Yes">Yes</option>
+</select>
+</label>
+
+<label>
+Was the ADR life-threatening?
+<select id="life">
+<option value="No">No</option>
+<option value="Yes">Yes</option>
+</select>
+</label>
+
+<label>
+Did it require or prolong hospitalization?
+<select id="hospital">
+<option value="No">No</option>
+<option value="Yes">Yes</option>
+</select>
+</label>
+
+<label>
+Did it cause significant disability/incapacity?
+<select id="disability">
+<option value="No">No</option>
+<option value="Yes">Yes</option>
+</select>
+</label>
+
+<label>
+Did it cause a congenital anomaly/birth defect?
+<select id="congenital">
+<option value="No">No</option>
+<option value="Yes">Yes</option>
+</select>
+</label>
+
+<label>
+Other medically important event?
+<select id="important">
+<option value="No">No</option>
+<option value="Yes">Yes</option>
+</select>
+</label>
+
+</section>
+
+<section>
+
+<h2>Severity Assessment</h2>
+
+<label>
+Clinical Severity
+<select id="severity">
+<option value="">Select</option>
+<option>Mild</option>
+<option>Moderate</option>
+<option>Severe</option>
+</select>
+</label>
+
+<label>
+Outcome
+<select id="outcome">
+<option value="">Select</option>
+<option>Recovered</option>
+<option>Recovering</option>
+<option>Not recovered</option>
+<option>Fatal</option>
+<option>Unknown</option>
+</select>
+</label>
+
+</section>
+
+<section>
+
+<h2>Expectedness Assessment</h2>
+
+<p class="note">
+Compare the reported reaction with the applicable approved product information
+or reference safety information.
+</p>
+
+<label>
+Is the reaction listed in the applicable product information?
+<select id="expected">
+<option value="">Select</option>
+<option>Yes</option>
+<option>No</option>
+<option>Unknown</option>
+</select>
+</label>
+
+</section>
+
+<section>
+
+<h2>Case Evaluation</h2>
+
+<button onclick="classifyCase()">Classify Case</button>
+
+<div id="result" class="result hidden"></div>
+
+</section>
+
+<section>
+
+<h2>Clinical Impact</h2>
+
+<p>
+The assessment is based on the information entered in this educational
+pharmacovigilance tool. Final case assessment should follow the applicable
+pharmacovigilance regulations, company procedures and product information.
+</p>
+
+</section>
+
+</div>
+
+<script>
+
+function value(id){
+    return document.getElementById(id).value;
+}
+
+function esc(text){
+    return String(text).replace(/[&<>"]/g,function(c){
+        return {
+            '&':'&amp;',
+            '<':'&lt;',
+            '>':'&gt;',
+            '"':'&quot;'
+        }[c];
+    });
+}
+
+function classifyCase(){
+
+    let patient=value("patient");
+    let reaction=value("reaction");
+    let drug=value("drug");
+    let severity=value("severity");
+    let expected=value("expected");
+    let outcome=value("outcome");
+
+    if(!patient || !reaction || !drug || !severity || !expected || !outcome){
+        alert("Please complete all required case information.");
+        return;
+    }
+
+    let serious="Non-serious";
+
+    if(
+        value("death")==="Yes" ||
+        value("life")==="Yes" ||
+        value("hospital")==="Yes" ||
+        value("disability")==="Yes" ||
+        value("congenital")==="Yes" ||
+        value("important")==="Yes"
+    ){
+        serious="Serious";
+    }
+
+    let clinicalImpact="Low";
+
+    if(severity==="Moderate"){
+        clinicalImpact="Moderate";
+    }
+
+    if(severity==="Severe" || serious==="Serious"){
+        clinicalImpact="High";
+    }
+
+    let classification="Non-serious ADR";
+
+    if(serious==="Serious"){
+        classification="Serious ADR";
+    }
+
+    let expectedText="Unknown";
+
+    if(expected==="Yes"){
+        expectedText="Expected";
+    }
+
+    if(expected==="No"){
+        expectedText="Unexpected";
+    }
+
+    let html="";
+
+    html += "<h2>Case Classification Result</h2>";
+
+    html += "<div class='row'><b>Patient ID:</b> "
+        + esc(patient) + "</div>";
+
+    html += "<div class='row'><b>ADR:</b> "
+        + esc(reaction) + "</div>";
+
+    html += "<div class='row'><b>Suspected Drug:</b> "
+        + esc(drug) + "</div>";
+
+    html += "<div class='row'><b>Seriousness:</b> "
+        + "<span class='badge'>" + serious + "</span></div>";
+
+    html += "<div class='row'><b>Severity:</b> "
+        + "<span class='badge'>" + esc(severity) + "</span></div>";
+
+    html += "<div class='row'><b>Expectedness:</b> "
+        + "<span class='badge'>" + expectedText + "</span></div>";
+
+    html += "<div class='row'><b>Outcome:</b> "
+        + esc(outcome) + "</div>";
+
+    html += "<div class='row'><b>Clinical Impact:</b> "
+        + "<span class='badge'>" + clinicalImpact + "</span></div>";
+
+    html += "<div class='row'><b>Overall Case Classification:</b> "
+        + "<span class='badge'>" + classification + "</span></div>";
+
+    html += "<br><p><b>Assessment Summary:</b> ";
+
+    if(serious==="Serious"){
+        html += "The case meets at least one seriousness criterion and should be handled as a serious ADR case.";
+    }else{
+        html += "No selected seriousness criterion was identified, so the case is classified as non-serious.";
+    }
+
+    html += " Severity reflects the intensity of the reaction, while seriousness is based on regulatory outcome criteria.";
+
+    if(expected==="No"){
+        html += " The reported reaction is marked unexpected because it was entered as not listed in the applicable product information.";
+    }
+
+    if(expected==="Unknown"){
+        html += " Expectedness cannot be determined without checking the applicable product information.";
+    }
+
+    html += "</p>";
+
+    document.getElementById("result").innerHTML=html;
+
+    document.getElementById("result").classList.remove("hidden");
+
+    document.getElementById("result").scrollIntoView({
+        behavior:"smooth"
+    });
+}
+
+</script>
+
+</body>
+</html>
